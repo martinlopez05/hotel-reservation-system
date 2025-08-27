@@ -4,6 +4,7 @@ import com.hotels.microservices.msvc_reservations.dto.ReservationRequestDTO;
 import com.hotels.microservices.msvc_reservations.dto.ReservationResponseDTO;
 import com.hotels.microservices.msvc_reservations.model.Reservation;
 import com.hotels.microservices.msvc_reservations.service.IServiceReservation;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +29,13 @@ public class ReservationController {
         return ResponseEntity.ok(serviceReservation.findById(id));
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<ReservationResponseDTO>> getReservationByUserId(@PathVariable Long userId){
+        return ResponseEntity.ok(serviceReservation.findByUserId(userId));
+    }
+
     @PostMapping
-    public ResponseEntity<ReservationResponseDTO> createReservation(@RequestBody ReservationRequestDTO reservationRequestDTO){
+    public ResponseEntity<ReservationResponseDTO> createReservation(@Valid @RequestBody ReservationRequestDTO reservationRequestDTO){
         ReservationResponseDTO reservationResponseDTO = serviceReservation.create(reservationRequestDTO);
         return new ResponseEntity<>(reservationResponseDTO, HttpStatus.CREATED);
     }

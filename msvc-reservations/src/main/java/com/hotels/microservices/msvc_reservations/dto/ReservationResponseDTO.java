@@ -15,7 +15,7 @@ public class ReservationResponseDTO {
     private String hotelName;
     private int roomNumber;
     private Long orderNumber;
-    private String userName;
+    private String username;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
     private double price;

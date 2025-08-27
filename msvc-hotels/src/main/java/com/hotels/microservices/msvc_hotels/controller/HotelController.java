@@ -1,8 +1,11 @@
 package com.hotels.microservices.msvc_hotels.controller;
 
+import com.hotels.microservices.msvc_hotels.config.RabbitHotelConfig;
 import com.hotels.microservices.msvc_hotels.dtos.HotelDTO;
 import com.hotels.microservices.msvc_hotels.model.Hotel;
 import com.hotels.microservices.msvc_hotels.service.IServiceHotel;
+import jakarta.validation.Valid;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +16,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/hotels")
 public class HotelController {
+
+    @Autowired
+    RabbitTemplate rabbitTemplate;
 
     @Autowired
     IServiceHotel serviceHotel;
@@ -28,7 +34,7 @@ public class HotelController {
     }
 
     @PostMapping
-    public ResponseEntity<HotelDTO> createHotel(@RequestBody HotelDTO hotelDTO){
+    public ResponseEntity<HotelDTO> createHotel(@Valid @RequestBody HotelDTO hotelDTO){
         HotelDTO createdHotelDTO = serviceHotel.create(hotelDTO);
         return new ResponseEntity<>(createdHotelDTO, HttpStatus.CREATED);
     }
@@ -36,6 +42,11 @@ public class HotelController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteHotel(@PathVariable Long id){
         serviceHotel.delete(id);
+        rabbitTemplate.convertAndSend(
+                RabbitHotelConfig.EXCHANGE,
+                RabbitHotelConfig.ROUTING_KEY,
+                id
+        );
         return ResponseEntity.noContent().build();
     }
 

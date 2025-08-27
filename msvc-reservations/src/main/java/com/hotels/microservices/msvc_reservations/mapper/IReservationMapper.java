@@ -13,5 +13,4 @@ public interface IReservationMapper {
 
     ReservationResponseDTO toReservationResponse(Reservation reservation);
 
-
 }

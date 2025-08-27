@@ -2,10 +2,8 @@ package com.hotels.microservices.msvc_reservations.service;
 
 import com.hotels.microservices.msvc_reservations.client.HotelClientRest;
 import com.hotels.microservices.msvc_reservations.client.RoomCilentRest;
-import com.hotels.microservices.msvc_reservations.dto.HotelDTO;
-import com.hotels.microservices.msvc_reservations.dto.ReservationResponseDTO;
-import com.hotels.microservices.msvc_reservations.dto.ReservationRequestDTO;
-import com.hotels.microservices.msvc_reservations.dto.RoomDTO;
+import com.hotels.microservices.msvc_reservations.client.UserClientRest;
+import com.hotels.microservices.msvc_reservations.dto.*;
 import com.hotels.microservices.msvc_reservations.mapper.IReservationMapper;
 import com.hotels.microservices.msvc_reservations.model.Reservation;
 import com.hotels.microservices.msvc_reservations.repository.IRepositoryReservation;
@@ -28,13 +26,16 @@ public class ServiceReservation implements IServiceReservation{
     IReservationMapper reservationMapper;
 
     @Autowired
-    RoomCilentRest roomCilentRest;
+    RoomCilentRest roomClientRest;
 
     @Autowired
     HotelClientRest hotelClientRest;
 
     @Autowired
-    private SequenceGeneratorService sequenceGenerator;
+    SequenceGeneratorService sequenceGenerator;
+
+    @Autowired
+    UserClientRest userClientRest;
 
     @Override
     public ReservationResponseDTO create(ReservationRequestDTO reservationRequestDTO) {
@@ -59,8 +60,7 @@ public class ServiceReservation implements IServiceReservation{
             throw new RuntimeException("Room is  reservated  on  the dates");
         }
 
-        RoomDTO roomDTO = roomCilentRest.getRoom(reservationRequestDTO.getRoomId()).getBody();
-        HotelDTO hotelDTO = hotelClientRest.getHotel(reservationRequestDTO.getHotelId(),false).getBody();
+        RoomDTO roomDTO = roomClientRest.getRoom(reservationRequestDTO.getRoomId()).getBody();
 
         Reservation reservation = reservationMapper.toReservation(reservationRequestDTO);
 
@@ -70,10 +70,7 @@ public class ServiceReservation implements IServiceReservation{
         repositoryReservation.save(reservation);
 
         ReservationResponseDTO reservationResponseDTO = reservationMapper.toReservationResponse(reservation);
-
-        reservationResponseDTO.setUserName(null);
-        reservationResponseDTO.setHotelName(hotelDTO.getName());
-        reservationResponseDTO.setRoomNumber(roomDTO.getRoomNumber());
+        enrichReservationDTO(reservationResponseDTO,reservation);
 
         return reservationResponseDTO;
 
@@ -86,14 +83,7 @@ public class ServiceReservation implements IServiceReservation{
 
         for (Reservation r : reservations) {
             ReservationResponseDTO dto = reservationMapper.toReservationResponse(r);
-
-            RoomDTO roomDTO = roomCilentRest.getRoom(r.getRoomId()).getBody();
-            HotelDTO hotelDTO = hotelClientRest.getHotel(r.getHotelId(), false).getBody();
-
-            dto.setRoomNumber(roomDTO != null ? roomDTO.getRoomNumber() : 0);
-            dto.setHotelName(hotelDTO != null ? hotelDTO.getName() : null);
-            dto.setUserName(null); //cambiar
-
+            enrichReservationDTO(dto,r);
             responseList.add(dto);
         }
 
@@ -107,19 +97,44 @@ public class ServiceReservation implements IServiceReservation{
 
         ReservationResponseDTO dto = reservationMapper.toReservationResponse(reservation);
 
-        RoomDTO roomDTO = roomCilentRest.getRoom(reservation.getRoomId()).getBody();
-        HotelDTO hotelDTO = hotelClientRest.getHotel(reservation.getHotelId(), false).getBody();
-
-        dto.setRoomNumber(roomDTO != null ? roomDTO.getRoomNumber() : 0);
-        dto.setHotelName(hotelDTO != null ? hotelDTO.getName() : null);
-        dto.setUserName(null);//cambiar
+        enrichReservationDTO(dto,reservation);
 
         return dto;
     }
 
     @Override
+    public List<ReservationResponseDTO> findByUserId(Long userId) {
+        List<Reservation> reservations = repositoryReservation.findByUserId(userId);
+        List<ReservationResponseDTO> responseList = new ArrayList<>();
+
+        for (Reservation r : reservations) {
+            ReservationResponseDTO dto = reservationMapper.toReservationResponse(r);
+            enrichReservationDTO(dto,r);
+            responseList.add(dto);
+        }
+
+        return responseList;
+
+    }
+
+    @Override
     public void deleteById(String id) {
-        repositoryReservation.deleteById(String.valueOf(id));
+        if(!repositoryReservation.existsById(id)) {
+            throw new EntityNotFoundException("Reservation not found");
+        }
+        repositoryReservation.deleteById(id);
+    }
+
+
+
+    private void enrichReservationDTO(ReservationResponseDTO dto, Reservation reservation) {
+        RoomDTO roomDTO = roomClientRest.getRoom(reservation.getRoomId()).getBody();
+        HotelDTO hotelDTO = hotelClientRest.getHotel(reservation.getHotelId(), false).getBody();
+        UserDTO userDTO = userClientRest.getUser(reservation.getUserId()).getBody();
+
+        dto.setRoomNumber(roomDTO != null ? roomDTO.getRoomNumber() : 0);
+        dto.setHotelName(hotelDTO != null ? hotelDTO.getName() : null);
+        dto.setUsername(userDTO != null ? userDTO.getUsername() : null);
     }
 
 

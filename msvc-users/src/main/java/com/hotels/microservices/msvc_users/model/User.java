@@ -7,24 +7,24 @@ import lombok.NoArgsConstructor;
 
 import javax.naming.Name;
 
-@Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
+@Table(name = "users")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "username")
+    @Column(name = "username", nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(name = "password")
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "email_user")
+    @Column(name = "email_user", nullable = false, unique = true)
     private String email;
-
 
 }

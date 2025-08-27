@@ -60,6 +60,9 @@ public class ServiceHotel implements IServiceHotel{
     @Override
     @Transactional
     public void delete(Long id) {
+        if(!repositoryHotel.existsById(id)) {
+            throw new EntityNotFoundException("Hotel not found");
+        }
         roomClientRest.deleteRoomsByHotel(id);
         repositoryHotel.deleteById(id);
     }
@@ -68,7 +71,7 @@ public class ServiceHotel implements IServiceHotel{
     @Transactional
     public HotelDTO edit(HotelDTO hotelDTO, Long id) {
         Hotel hotelEdit = repositoryHotel.findById(id).orElseThrow(() -> new EntityNotFoundException("Entity not found"));
-        hotelMapper.updateRoomFromDTO(hotelDTO, hotelEdit);
+        hotelMapper.updateHotelFromDTO(hotelDTO, hotelEdit);
         Hotel editedHotel = repositoryHotel.save(hotelEdit);
         return  hotelMapper.toDTO(editedHotel);
     }

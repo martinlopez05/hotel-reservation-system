@@ -62,9 +62,10 @@ public class ServiceRoom implements IServiceRoom{
     @Override
     @Transactional
     public void deleteRoom(Long id) {
-        Room room = repositoryRoom.findById(id)
-                .orElseThrow(() -> new RoomNotFoundException("Room not found with id " + id,"ROOM_NOT_FOUND"));
-        repositoryRoom.delete(room);
+        if(!repositoryRoom.existsById(id)) {
+            throw new RoomNotFoundException("Room not found with id " + id, "ROOM_NOT_FOUND");
+        }
+        repositoryRoom.deleteById(id);
     }
 
     @Override

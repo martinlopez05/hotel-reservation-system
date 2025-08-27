@@ -15,4 +15,6 @@ public interface IServiceReservation {
 
     void deleteById(String id);
 
+    List<ReservationResponseDTO> findByUserId(Long userId);
+
 }

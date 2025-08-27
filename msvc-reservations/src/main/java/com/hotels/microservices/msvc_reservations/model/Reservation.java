@@ -21,6 +21,7 @@ public class Reservation {
     private String id;
     private Long roomId;
     private Long hotelId;
+    private Long userId;
     private Long orderNumber;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;

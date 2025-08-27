@@ -15,5 +15,5 @@ public interface IHotelMapper {
      Hotel toHotel(HotelDTO hotelDTO);
 
     @Mapping(target = "id", ignore = true)
-    void updateRoomFromDTO(HotelDTO hotelDTO, @MappingTarget Hotel hotel);
+    void updateHotelFromDTO(HotelDTO hotelDTO, @MappingTarget Hotel hotel);
 }
